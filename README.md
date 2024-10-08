@@ -44,4 +44,6 @@ SPOTIPY_REDIRECT_URI=http://localhost:8888/callback/
 python main.py
 ```
 
+The first time you run the script, it will open a browser for you to authenticate with Spotify. After that, it will handle token refreshes automatically.
+
 
