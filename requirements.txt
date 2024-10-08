@@ -1,0 +1,4 @@
+spotipy
+youtubesearchpython
+yt-dlp
+python-dotenv
