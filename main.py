@@ -88,7 +88,7 @@ def main():
     
     # Get newly added songs into a new list
     new_songs = [song for song in liked_songs if song not in downloaded_songs]
-    print('\nNew Songs:', new_songs)
+    print('\nNew Songs:', new_songs if len(new_songs) > 1 else 'No new songs!')
     
     # Download new songs and track them in the CSV
     for song in new_songs:
