@@ -24,13 +24,13 @@ git clone https://github.com/yourusername/yourprojectname.git
 cd yourprojectname
 ```
 
-## 2. Install Dependencies:
+### 2. Install Dependencies:
 Make sure you have Python 3 installed. Then install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-## 3. Set Up Spotify API Credentials:
+### 3. Set Up Spotify API Credentials:
 1. Create a .env file in the root directory of the project.
 2. Add your Spotify API credentials in the .env file:
 
@@ -39,7 +39,7 @@ SPOTIPY_CLIENT_ID=your_spotify_client_id
 SPOTIPY_CLIENT_SECRET=your_spotify_client_secret
 SPOTIPY_REDIRECT_URI=http://localhost:8888/callback/
 ```
-## 4. Run the script
+### 4. Run the script
 ```bash
 python main.py
 ```
