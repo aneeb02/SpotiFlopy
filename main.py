@@ -1,8 +1,6 @@
 import csv
 import os
 from pathlib import Path
-
-from youtubesearchpython import VideosSearch
 from yt_dlp import YoutubeDL
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -25,6 +23,21 @@ DESKTOP_PATH = Path.home() / "Desktop" / "Songs"
 
 # Ensure the Songs folder exists
 DESKTOP_PATH.mkdir(parents=True, exist_ok=True)
+
+
+def search_youtube(query: str) -> str:
+    """
+    Return the URL of the top YouTube result for the given query.
+    Uses yt-dlp’s built-in search extractor (no API key needed).
+    """
+    ydl_opts = {"quiet": True, "skip_download": True}
+    with YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"ytsearch1:{query}", download=False)
+        if not info["entries"]:
+            raise ValueError(f"No YouTube results for {query!r}")
+        return f"https://www.youtube.com/watch?v={info['entries'][0]['id']}"
+
+
 
 def getLikedSongs():  # Get all liked songs on Spotify
     results = sp.current_user_saved_tracks(limit=50)
@@ -62,23 +75,20 @@ def getNewSong(song, artist):  # Add the new song into the CSV file
         writer = csv.writer(file)
         writer.writerow([song, artist])
 
-def downloadSong(song, artist):  # Download song from YouTube
-    song_query = f"{song} by {artist}"
-    search = VideosSearch(song_query, limit=1)
-    
-    result = search.result()['result'][0]
-    youtube_url = result['link']
-    
+def downloadSong(song: str, artist: str) -> None:
+    query = f"{song} by {artist}"
+    youtube_url = search_youtube(query)
+
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': str(DESKTOP_PATH / f"{song_query}.%(ext)s"),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
+        "format": "bestaudio/best",
+        "outtmpl": str(DESKTOP_PATH / f"{query}.%(ext)s"),
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
         }],
     }
-    
+
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_url])
 
