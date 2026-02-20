@@ -38,3 +38,6 @@ env/
 # -------------------------
 .DS_Store
 Thumbs.db
+
+SpotiFlopy-clean/
+myenv/
