@@ -37,7 +37,7 @@ pip install -r requirements.txt
 ```env
 SPOTIPY_CLIENT_ID=your_spotify_client_id
 SPOTIPY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIPY_REDIRECT_URI=http://localhost:8888/callback/ # Or use clouudflare worker https://github.com/1111ij1/spotify-proxy
+SPOTIPY_REDIRECT_URI=http://localhost:8888/callback/ # Or use cloudflare worker https://github.com/1111ij1/spotify-proxy
 ```
 ### 4. Run the script
 ```bash
