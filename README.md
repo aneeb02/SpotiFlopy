@@ -20,8 +20,8 @@ Automatically download all your liked songs on Spotify, without paying a dime.
 
 ### 1. Clone the Repository:
 ```bash
-git clone https://github.com/yourusername/yourprojectname.git
-cd yourprojectname
+git clone https://github.com/aneeb02/SpotiFlopy.git
+cd spotiflopy
 ```
 
 ### 2. Install Dependencies:
