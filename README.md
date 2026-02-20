@@ -25,7 +25,9 @@ cd yourprojectname
 ```
 
 ### 2. Install Dependencies:
-Make sure you have Python 3 installed. Then install the required packages:
+Make sure you have Python 3 installed. Then install the required packages: # Viirtual env : python -m venv myenv
+ and activate source myenv/bin/activate
+
 ```bash
 pip install -r requirements.txt
 ```
