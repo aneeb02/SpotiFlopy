@@ -2,3 +2,14 @@
 *.env
 .cache
 *.cache
+
+# Ignore CSV tracker
+songs.csv
+
+# Ignore temporary FFmpeg scripts
+FFmpegAudioConvertPP
+FFmpegAudioConvertPPails
+FFmpegNormalizePP
+
+# Ignore local Python environment
+venv/
