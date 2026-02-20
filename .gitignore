@@ -1,15 +1,40 @@
+# -------------------------
+# Environment files
+# -------------------------
 .env
 *.env
-.cache
+
+# -------------------------
+# Python cache and temporary files
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.cache/
 *.cache
 
-# Ignore CSV tracker
+# -------------------------
+# CSV tracker
+# -------------------------
 songs.csv
 
-# Ignore temporary FFmpeg scripts
+# -------------------------
+# Temporary FFmpeg scripts
+# -------------------------
 FFmpegAudioConvertPP
 FFmpegAudioConvertPPails
 FFmpegNormalizePP
 
-# Ignore local Python environment
+# -------------------------
+# Python virtual environment
+# -------------------------
 venv/
+env/
+.venv/
+
+# -------------------------
+# OS-specific files
+# -------------------------
+.DS_Store
+Thumbs.db
