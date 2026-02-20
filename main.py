@@ -1,113 +1,141 @@
-import csv
 import os
+import csv
 from pathlib import Path
 from yt_dlp import YoutubeDL
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 
+# -------------------------
+# Spotify Auth
+# -------------------------
 scope = "user-library-read"
 
 load_dotenv()
-client_id = os.getenv("SPOTIPY_CLIENT_ID")
-client_secret = os.getenv("SPOTIPY_CLIENT_SECRET")
-redirect_uri = os.getenv("SPOTIPY_REDIRECT_URI")
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
+    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
+    redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
+    scope=scope
+))
 
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id,
-                                               client_secret=client_secret,
-                                               redirect_uri=redirect_uri,
-                                               scope=scope))
+# -------------------------
+# Paths
+# -------------------------
+BASE_PATH = Path.home() / "Desktop" / "Songs"
+BASE_PATH.mkdir(parents=True, exist_ok=True)
 
-SONGS_TRACKER = "songs.csv"
-DESKTOP_PATH = Path.home() / "Desktop" / "Songs"
+SONGS_TRACKER = BASE_PATH / "songs.csv"
+if not SONGS_TRACKER.exists():
+    with open(SONGS_TRACKER, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Artist", "Album", "Track", "Track Number"])  # header
 
-# Ensure the Songs folder exists
-DESKTOP_PATH.mkdir(parents=True, exist_ok=True)
+# -------------------------
+# Helpers
+# -------------------------
+
+def sanitize(text: str) -> str:
+    """Remove filesystem-invalid characters."""
+    return "".join(c for c in text if c not in r'\/:*?"<>|').strip()
 
 
 def search_youtube(query: str) -> str:
-    """
-    Return the URL of the top YouTube result for the given query.
-    Uses yt-dlp’s built-in search extractor (no API key needed).
-    """
-    ydl_opts = {"quiet": True, "skip_download": True}
-    with YoutubeDL(ydl_opts) as ydl:
+    """Return first YouTube result URL."""
+    with YoutubeDL({"quiet": True, "skip_download": True}) as ydl:
         info = ydl.extract_info(f"ytsearch1:{query}", download=False)
         if not info["entries"]:
-            raise ValueError(f"No YouTube results for {query!r}")
+            raise ValueError(f"No results for {query}")
         return f"https://www.youtube.com/watch?v={info['entries'][0]['id']}"
 
 
-
-def getLikedSongs():  # Get all liked songs on Spotify
+def get_liked_songs():
+    """Return list of (track_name, artist_name, album_name, track_number)."""
     results = sp.current_user_saved_tracks(limit=50)
-    all_tracks = []
-    
+    songs = []
+
     while results:
-        for item in results['items']:
-            track = item['track']
-            song_name = track['name']
-            artist_name = track['artists'][0]['name']
-            all_tracks.append(f"{song_name} by {artist_name}")
-        if results['next']:
-            results = sp.next(results)
-        else:
-            break
-    return all_tracks
+        for item in results["items"]:
+            track = item["track"]
+            song = track["name"]
+            artist = track["artists"][0]["name"]
+            album = track["album"]["name"]
+            track_number = track["track_number"]
+            songs.append((song, artist, album, track_number))
+        results = sp.next(results) if results["next"] else None
 
-def getDownloadedSongs():  # Read CSV and get already downloaded songs
-    if not os.path.exists(SONGS_TRACKER):
-        return []
-    downloaded_songs = []
-    with open(SONGS_TRACKER, 'r', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        next(reader)  # Skip header
-        for row in reader:
-            if len(row) < 2:
-                continue  # Skip rows that don't have both song name and artist
-            song_name = row[0].strip() 
-            artist_name = row[1].strip() 
-            downloaded_songs.append(f"{song_name} by {artist_name}")
-    return downloaded_songs  
+    return songs
 
-def getNewSong(song, artist):  # Add the new song into the CSV file
-    with open(SONGS_TRACKER, 'a', encoding='utf-8', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([song, artist])
 
-def downloadSong(song: str, artist: str) -> None:
-    query = f"{song} by {artist}"
+def already_downloaded(artist: str, album: str, track_number: int, track_name: str) -> bool:
+    file_path = BASE_PATH / sanitize(artist) / sanitize(album) / f"{track_number:02d} - {sanitize(track_name)}.mp3"
+    return file_path.exists()
+
+
+def save_to_csv(artist: str, album: str, track_name: str, track_number: int):
+    with open(SONGS_TRACKER, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([artist, album, track_name, track_number])
+
+
+def download_song(track_name: str, artist: str, album: str, track_number: int):
+    query = f"{track_name} {artist} official audio"
     youtube_url = search_youtube(query)
+
+    artist_folder = BASE_PATH / sanitize(artist)
+    album_folder = artist_folder / sanitize(album)
+    album_folder.mkdir(parents=True, exist_ok=True)
+
+    output_template = str(album_folder / f"{track_number:02d} - {sanitize(track_name)}.%(ext)s")
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "outtmpl": str(DESKTOP_PATH / f"{query}.%(ext)s"),
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }],
+        "outtmpl": output_template,
+        "noplaylist": True,
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            },
+            {
+                "key": "FFmpegMetadata"
+            },
+            {
+                "key": "EmbedThumbnail"
+            }
+        ],
+        "quiet": False,
+        "addmetadata": True,
+        "embedthumbnail": True,
+        "ffmpeg_postprocessor_args": ["-af", "loudnorm"]  # normalize volume
     }
 
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_url])
 
-def main():
-    liked_songs = getLikedSongs()  # Fetch liked songs from Spotify
-    downloaded_songs = getDownloadedSongs()  # Fetch already downloaded songs
-    
-    # Get newly added songs into a new list
-    new_songs = [song for song in liked_songs if song not in downloaded_songs]
-    print('\nNew Songs:', new_songs if len(new_songs) > 1 else 'No new songs!')
-    
-    # Download new songs and track them in the CSV
-    for song in new_songs:
-        try:
-            song_name, artist_name = song.split(' by ', 1)
-            downloadSong(song_name, artist_name)
-            getNewSong(song_name, artist_name)
-        except Exception as e:
-            print(f"Failed to download {song}: {e}")
 
-if __name__ == '__main__':
+# -------------------------
+# Main
+# -------------------------
+
+def main():
+    liked_songs = get_liked_songs()
+    print(f"\nFound {len(liked_songs)} liked songs.\n")
+
+    for track_name, artist, album, track_number in liked_songs:
+        try:
+            if already_downloaded(artist, album, track_number, track_name):
+                print(f"Skipping (already exists): {track_number:02d} - {track_name} - {artist}")
+                continue
+
+            print(f"Downloading: {track_number:02d} - {track_name} - {artist}")
+            download_song(track_name, artist, album, track_number)
+            save_to_csv(artist, album, track_name, track_number)
+
+        except Exception as e:
+            print(f"Failed: {track_number:02d} - {track_name} - {artist} -> {e}")
+
+
+if __name__ == "__main__":
     main()
