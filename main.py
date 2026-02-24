@@ -74,7 +74,29 @@ def choose_download_folder(force_change=False) -> Path:
 # -------------------------
 
 def sanitize(text: str) -> str:
-    return "".join(c for c in text if c not in r'\/:*?"<>|').strip()
+    """
+    Safe filename sanitizer.
+    - Replaces slashes with dash instead of removing them
+    - Removes invalid filesystem characters
+    - Prevents accidental folder creation from '/'
+    """
+
+    if not text:
+        return "unknown"
+
+    # Replace forward and backward slashes with dash
+    text = text.replace("/", " - ")
+    text = text.replace("\\", " - ")
+
+    # Remove other invalid characters
+    invalid_chars = r':*?"<>|'
+    text = "".join(c for c in text if c not in invalid_chars)
+
+    # Clean extra spaces/dashes
+    text = " ".join(text.split())
+    text = text.strip(" -")
+
+    return text.strip()
 
 
 def search_youtube(query: str) -> str:
