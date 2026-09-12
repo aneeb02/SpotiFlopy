@@ -34,18 +34,27 @@ pip install -r requirements.txt
 **Important:** You also need to install `ffmpeg` on your system and ensure it's available in your system's PATH, as it is required for audio extraction, volume normalization, and metadata embedding.
 
 ### 3. Set Up Spotify API Credentials:
-1. Create a `.env` file in the root directory of the project.
-2. Add your Spotify API credentials in the `.env` file:
+1. Create an app in the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Add `http://127.0.0.1:8888/callback/` to the app's **Redirect URIs**. It must match the value in `.env` exactly.
+3. Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+4. Replace the placeholder client ID and client secret in `.env` with the credentials from your Spotify app:
 
 ```env
 SPOTIPY_CLIENT_ID=your_spotify_client_id
 SPOTIPY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIPY_REDIRECT_URI=http://localhost:8888/callback/
+SPOTIPY_REDIRECT_URI=http://127.0.0.1:8888/callback/
 ```
+
+The `.env` file is ignored by Git; do not commit your client secret.
+
 ### 4. Run the script
 ```bash
 python main.py
 ```
 
 The first time you run the script, it will open a browser for you to authenticate with Spotify. After that, it will handle token refreshes automatically.
-

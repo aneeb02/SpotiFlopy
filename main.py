@@ -60,7 +60,8 @@ def get_liked_songs():
         for item in results["items"]:
             track = item["track"]
             song = track["name"]
-            artist = track["artists"][0]["name"]
+            artist_names = [artist["name"] for artist in track["artists"]]
+            artist = ", ".join(artist_names)
             album = track["album"]["name"]
             track_number = track["track_number"]
             songs.append((song, artist, album, track_number))
